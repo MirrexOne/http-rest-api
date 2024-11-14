@@ -2,6 +2,7 @@ package sqlstore_test
 
 import (
 	"github.com/MirrexOne/http-rest-api/internal/app/model"
+	"github.com/MirrexOne/http-rest-api/internal/app/store"
 	"github.com/MirrexOne/http-rest-api/internal/app/store/sqlstore"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -26,7 +27,7 @@ func TestUserRepository_FindByEmail(t *testing.T) {
 
 	email := "user@example.com"
 	_, err := s.User().FindByEmail(email)
-	assert.Error(t, err)
+	assert.EqualError(t, err, store.ErrRecordNotFound.Error())
 
 	u := model.TestUser(t)
 	u.Email = email

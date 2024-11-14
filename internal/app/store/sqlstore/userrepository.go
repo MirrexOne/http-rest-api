@@ -1,6 +1,10 @@
 package sqlstore
 
-import "github.com/MirrexOne/http-rest-api/internal/app/model"
+import (
+	"database/sql"
+	"github.com/MirrexOne/http-rest-api/internal/app/model"
+	"github.com/MirrexOne/http-rest-api/internal/app/store"
+)
 
 type UserRepository struct {
 	store *Store
@@ -32,7 +36,9 @@ func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 		&u.Email,
 		&u.EncryptedPassword,
 	); err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, store.ErrRecordNotFound
+		}
 	}
 
 	return u, nil

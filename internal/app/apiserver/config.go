@@ -1,19 +1,14 @@
 package apiserver
 
-import (
-	"github.com/MirrexOne/http-rest-api/internal/app/store/sqlstore"
-)
-
 type Config struct {
-	BindAddr string `toml:"bind_addr"`
-	LogLevel string `toml:"log_level"`
-	Store    *sqlstore.Config
+	BindAddr    string `toml:"bind_addr"`
+	LogLevel    string `toml:"log_level"`
+	DatabaseURL string `toml:"database_url"`
 }
 
 func NewConfig() *Config {
 	return &Config{
 		BindAddr: ":8080",
 		LogLevel: "debug",
-		Store:    sqlstore.NewConfig(),
 	}
 }
