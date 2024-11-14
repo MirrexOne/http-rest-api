@@ -3,6 +3,7 @@ package apiserver
 import (
 	"database/sql"
 	"github.com/MirrexOne/http-rest-api/internal/app/store/sqlstore"
+	"github.com/gorilla/sessions"
 	"net/http"
 )
 
@@ -13,9 +14,9 @@ func Start(config *Config) error {
 	}
 
 	defer db.Close()
-
 	store := sqlstore.New(db)
-	srv := newServer(store)
+	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
+	srv := newServer(store, sessionStore)
 
 	return http.ListenAndServe(config.BindAddr, srv)
 }
