@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/MirrexOne/http-rest-api/internal/app/model"
@@ -12,11 +13,15 @@ import (
 
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
+	errNotAuthenticated         = errors.New("Not authenticated")
 )
 
 const (
-	sessionName = "Mirrex.devIO"
+	sessionName        = "Mirrex.devIO"
+	ctxKeyUser  ctxKey = iota
 )
+
+type ctxKey int8
 
 type server struct {
 	router       *mux.Router
@@ -82,6 +87,30 @@ func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data 
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
 	}
+}
+
+func (s *server) authenticateUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		session, err := s.sessionStore.Get(request, sessionName)
+		if err != nil {
+			s.error(writer, request, http.StatusInternalServerError, err)
+			return
+		}
+
+		id, ok := session.Values["user_id"]
+		if !ok {
+			s.error(writer, request, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		u, err := s.store.User().Find(id.(int))
+		if err != nil {
+			s.error(writer, request, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		next.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), ctxKeyUser, u)))
+	})
 }
 
 func (s *server) handleSessionsCreate() func(w http.ResponseWriter, r *http.Request) {
